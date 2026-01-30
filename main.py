@@ -32,14 +32,18 @@ PROCESSED_COLLECTION = "processed_files"
 # Helper Functions
 # ------------------------
 def already_processed(filename: str) -> bool:
-    doc_ref = firestore_client.collection(PROCESSED_COLLECTION).document(filename)
+    safe_doc_id = filename.replace("/", "_")
+    doc_ref = firestore_client.collection(PROCESSED_COLLECTION).document(safe_doc_id)
     return doc_ref.get().exists
 
 
+
 def mark_processed(filename: str):
-    firestore_client.collection(PROCESSED_COLLECTION).document(filename).set({
-        "processed_at": datetime.utcnow().isoformat()
+    safe_doc_id = filename.replace("/", "_")
+    firestore_client.collection(PROCESSED_COLLECTION).document(safe_doc_id).set({
+        "processed_at": firestore.SERVER_TIMESTAMP
     })
+
 
 
 def compute_metrics(df: pd.DataFrame) -> dict:
