@@ -123,12 +123,25 @@ def gcs_event_handler():
         return make_response("OK", 200)
 
     try:
-        # ------------------------
-        # Read CSV from GCS
-        # ------------------------
+    # ------------------------
+    # Read CSV from GCS
+    # ------------------------
         bucket = storage_client.bucket(bucket_name)
         blob = bucket.blob(object_name)
-        csv_content = blob.download_as_text()
+        csv_bytes = blob.download_as_bytes()
+
+    # ------------------------
+    # Decode CSV safely
+    # ------------------------
+        try:
+            csv_content = csv_bytes.decode("utf-8")
+        except UnicodeDecodeError:
+            csv_content = csv_bytes.decode("latin-1")
+
+    except Exception as e:
+        logging.exception("Failed to read or decode CSV: %s", e)
+        return make_response("Internal Error", 500)
+
 
         df = pd.read_csv(StringIO(csv_content))
 
